@@ -110,6 +110,20 @@ describe('BrowserWindow module', () => {
       await emittedOnce(w.webContents, 'before-unload-fired');
     });
 
+    it('should not cause a crash if called when exiting fullscreen', async () => {
+      const enterFullScreen = emittedOnce(w, 'enter-full-screen');
+      w.setFullScreen(true);
+      await enterFullScreen;
+
+      await delay();
+
+      const leaveFullScreen = emittedOnce(w, 'leave-full-screen');
+      w.setFullScreen(false);
+      await leaveFullScreen;
+
+      w.close();
+    });
+
     describe('when invoked synchronously inside navigation observer', () => {
       let server: http.Server = null as unknown as http.Server;
       let url: string = null as unknown as string;
