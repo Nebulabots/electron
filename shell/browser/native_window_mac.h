@@ -8,6 +8,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include <memory>
+#include <queue>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -151,10 +152,12 @@ class NativeWindowMac : public NativeWindow, public ui::NativeThemeObserver {
   void SetCollectionBehavior(bool on, NSUInteger flag);
   void SetWindowLevel(int level);
 
-  // Custom traffic light positioning
+  // Handle fullscreen transitions.
+  void SetFullScreenTransitionState(FullScreenTransitionState state);
+  void HandlePendingFullscreenTransitions();
+
+  // Custom traffic light positioning.
   void RedrawTrafficLights() override;
-  void SetExitingFullScreen(bool flag);
-  void SetEnteringFullScreen(bool flag);
   void SetTrafficLightPosition(const gfx::Point& position) override;
   gfx::Point GetTrafficLightPosition() const override;
   void OnNativeThemeUpdated(ui::NativeTheme* observed_theme) override;
@@ -178,8 +181,6 @@ class NativeWindowMac : public NativeWindow, public ui::NativeThemeObserver {
   bool zoom_to_page_width() const { return zoom_to_page_width_; }
   bool fullscreen_window_title() const { return fullscreen_window_title_; }
   bool always_simple_fullscreen() const { return always_simple_fullscreen_; }
-  bool exiting_fullscreen() const { return exiting_fullscreen_; }
-  bool entering_fullscreen() const { return entering_fullscreen_; }
 
  protected:
   // views::WidgetDelegate:
@@ -216,9 +217,15 @@ class NativeWindowMac : public NativeWindow, public ui::NativeThemeObserver {
   bool zoom_to_page_width_ = false;
   bool fullscreen_window_title_ = false;
   bool resizable_ = true;
-  bool exiting_fullscreen_ = false;
-  bool entering_fullscreen_ = false;
   gfx::Point traffic_light_position_;
+
+  enum class FullScreenTransitionState { ENTERING, EXITING, NONE };
+
+  std::queue<bool> pending_transitions_;
+  FullScreenTransitionState fullscreen_transition_state() const {
+      return fullscreen_transition_state_}
+  FullScreenTransitionState
+      fullscreen_transition_state_ = FullScreenTransitionState::NONE;
 
   NSInteger attention_request_id_ = 0;  // identifier from requestUserAttention
 
